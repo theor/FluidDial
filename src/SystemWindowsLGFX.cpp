@@ -309,7 +309,9 @@ void base_display() {
 
 void show_logo() {}
 
-void system_background() {}
+void system_background() {
+    canvas.fillSprite(TFT_BLACK);
+}
 
 void set_layout(int n) {}
 
