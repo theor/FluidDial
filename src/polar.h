@@ -14,7 +14,7 @@ extern "C" {
 
 // 1 << REVS_BITS is a full circle
 // For, say, 45 degrees, use theta(45, 360);
-static inline int to_revs(int num, int denom) {
+inline int to_revs(int num, int denom) {
     return (num << REVS_BITS) / denom;
 }
 void r_revs_to_xy(int radius, int angle, int* px, int* py);
