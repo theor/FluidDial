@@ -105,7 +105,7 @@ HANDLE serial_open_com(char* portname) {
     HANDLE       hComm;
     COMMTIMEOUTS timeouts;
 
-    _snwprintf(wcomname, 10, L"\\\\.\\%S", portname);
+    snwprintf(wcomname, 10, L"\\\\.\\%S", portname);
     hComm = CreateFileW(wcomname, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     if (hComm == INVALID_HANDLE_VALUE) {
         return hComm;

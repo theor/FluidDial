@@ -43,27 +43,28 @@ FetchContent_Declare(GrblParser
 )
 FetchContent_MakeAvailable(LovyanGFX JsonStreamingParser GrblParser)
 
-# SDL2: try config first, fall back to cmake/FindSDL2.cmake
-# SDL2_LINK_TARGET is set to the CMake target to link against.
+# SDL2: try cmake/FindSDL2.cmake (finds MSYS2/MinGW installs) first,
+# then fall back to building SDL2 from source via FetchContent.
+# SDL2_LINK_TARGET holds the CMake target name to link against.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(SDL2)
 if (SDL2_FOUND)
     message(STATUS "Packaged version of SDL2 will be used.")
     set(SDL2_LINK_TARGET SDL2::SDL2)
 else()
-    message(STATUS "Bundled version of SDL2 will be downloaded and used (static).")
-    include(FetchContent)
+    message(STATUS "Bundled version of SDL2 will be downloaded and built (static).")
     FetchContent_Declare(
         SDL2
         GIT_REPOSITORY  https://github.com/libsdl-org/SDL.git
         GIT_TAG         5773c347d58d07a45b33ac4ecc93fd3e6a86d483
     )
     FetchContent_MakeAvailable(SDL2)
-    # Use the static target so the exe does not depend on SDL2.dll at runtime.
+    # Static target avoids a runtime SDL2.dll dependency.
     set(SDL2_LINK_TARGET SDL2-static)
 endif()
 
-# LovyanGFX: SDL platform files plus core implementation files
+# LovyanGFX: SDL platform files plus the core implementation files that
+# LovyanGFX expects the application to compile (they are not header-only).
 add_library(lovyangfx_sdl STATIC
     "${lovyangfx_SOURCE_DIR}/src/lgfx/v1/platforms/sdl/Panel_sdl.cpp"
     "${lovyangfx_SOURCE_DIR}/src/lgfx/v1/platforms/sdl/common.cpp"
@@ -89,13 +90,8 @@ add_library(lovyangfx_sdl STATIC
 target_include_directories(lovyangfx_sdl PUBLIC "${lovyangfx_SOURCE_DIR}/src")
 target_compile_definitions(lovyangfx_sdl PUBLIC LGFX_USE_V1)
 target_link_libraries(lovyangfx_sdl PUBLIC ${SDL2_LINK_TARGET})
-if(MSVC)
-    target_compile_options(lovyangfx_sdl PRIVATE
-        "/FI${CMAKE_SOURCE_DIR}/src/msvc_compat.h"
-    )
-endif()
 
-# json-streaming-parser
+# json-streaming-parser (sources live in the repo root, not src/)
 add_library(json_parser STATIC
     "${jsonstreamingparser_SOURCE_DIR}/JsonStreamingParser.cpp"
 )
@@ -110,14 +106,6 @@ add_library(grbl_parser STATIC
 )
 target_include_directories(grbl_parser PUBLIC "${grblparser_SOURCE_DIR}/src")
 target_compile_definitions(grbl_parser PUBLIC E4_POS_T)
-if(MSVC)
-    # MSVC does not support __attribute__((weak)); strip it via a forced-include header.
-    # /D cannot define function-like macros, so use /FI instead.
-    # Duplicate definitions (app vs. library stubs) are resolved via /FORCE:MULTIPLE below.
-    target_compile_options(grbl_parser PRIVATE
-        "/FI${CMAKE_SOURCE_DIR}/src/msvc_compat.h"
-    )
-endif()
 
 # Force sdlmain.c to compile as C++ (it #includes a .hpp)
 set_source_files_properties("${CMAKE_SOURCE_DIR}/src/sdlmain.c" PROPERTIES LANGUAGE CXX)
@@ -177,16 +165,4 @@ target_link_libraries(fluiddial_sdl PRIVATE lovyangfx_sdl json_parser grbl_parse
 if(WIN32)
     target_link_libraries(fluiddial_sdl PRIVATE comctl32)
     set_target_properties(fluiddial_sdl PROPERTIES WIN32_EXECUTABLE FALSE)
-endif()
-if(MSVC)
-    # LovyanGFX headers use __attribute__((packed)) etc.; strip for MSVC.
-    # Also inject linker aliases for global scene/menu objects whose declared type
-    # in referencing TUs differs from the defined type (MSVC mangles variable types).
-    target_compile_options(fluiddial_sdl PRIVATE
-        "/FI${CMAKE_SOURCE_DIR}/src/msvc_compat.h"
-        "/FI${CMAKE_SOURCE_DIR}/src/msvc_linker_compat.h"
-    )
-    # GrblParser uses __attribute__((weak)) stubs that are overridden by the app;
-    # /FORCE:MULTIPLE lets the linker accept duplicate symbols and prefer the app's definitions.
-    target_link_options(fluiddial_sdl PRIVATE /FORCE:MULTIPLE)
 endif()

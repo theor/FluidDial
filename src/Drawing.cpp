@@ -3,9 +3,7 @@
 
 #include "System.h"
 #include "Drawing.h"
-extern "C" {
 #include "alarm.h"
-}
 #include <map>
 
 void drawBackground(int color) {
