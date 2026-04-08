@@ -165,4 +165,10 @@ target_link_libraries(fluiddial_sdl PRIVATE lovyangfx_sdl json_parser grbl_parse
 if(WIN32)
     target_link_libraries(fluiddial_sdl PRIVATE comctl32)
     set_target_properties(fluiddial_sdl PROPERTIES WIN32_EXECUTABLE FALSE)
+    add_custom_command(TARGET fluiddial_sdl POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/data"
+            "$<TARGET_FILE_DIR:fluiddial_sdl>/data"
+        COMMENT "Copying data/ to build directory"
+    )
 endif()

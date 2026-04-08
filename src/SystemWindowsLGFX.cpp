@@ -242,6 +242,7 @@ void drawPngFile(const char* filename, int x, int y) {
 
 void drawPngFile(LGFX_Sprite* sprite, const char* filename, int x, int y) {
     std::string fn("data/");
+    if (filename[0] == '/') { ++filename; }
     fn += filename;
     sprite->drawPngFile(fn.c_str(), x, -y, 0, 0, 0, 0, 1.0f, 1.0f, datum_t::middle_center);
 }
