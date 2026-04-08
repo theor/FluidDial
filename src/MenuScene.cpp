@@ -38,8 +38,12 @@ extern Scene homingScene;
 //extern Scene joggingScene;
 //extern Scene joggingScene2;
 extern Scene multiJogScene;
+#ifndef NO_PROBE_MENU
 extern Scene probingScene;
+#endif
+#ifndef NO_TOOLCHANGE_MENU
 extern Scene toolchangeScene;
+#endif
 extern Scene statusScene;
 extern Scene macroMenu;
 
@@ -57,8 +61,12 @@ extern Scene aboutScene;
 IB statusButton("Status", &statusScene, "statustp.png");
 IB homingButton("Homing", &homingScene, "hometp.png");
 IB jogButton("Jog", &jogScene, "jogtp.png");
+#ifndef NO_PROBE_MENU
 IB probeButton("Probe", &probingScene, "probetp.png");
+#endif
+#ifndef NO_TOOLCHANGE_MENU
 IB toolchangeButton("Tools", &toolchangeScene, "toolchangetp.png");
+#endif
 
 #ifdef USE_WMB_FSS
 IB filesButton("Files", &wmbFileSelectScene, "filestp.png");
@@ -76,8 +84,12 @@ public:
         statusButton.disable();
         homingButton.disable();
         jogButton.disable();
+#ifndef NO_PROBE_MENU
         probeButton.disable();
+#endif
+#ifndef NO_TOOLCHANGE_MENU
         toolchangeButton.disable();
+#endif
         filesButton.disable();
         controlButton.disable();
         setupButton.enable();
@@ -86,8 +98,12 @@ public:
         statusButton.enable();
         homingButton.enable();
         jogButton.enable();
+#ifndef NO_PROBE_MENU
         probeButton.enable();
+#endif
+#ifndef NO_TOOLCHANGE_MENU
         toolchangeButton.enable();
+#endif
         filesButton.enable();
         controlButton.enable();
         setupButton.enable();
@@ -126,8 +142,12 @@ Scene* initMenus() {
     menuScene.addItem(&statusButton);
     menuScene.addItem(&homingButton);
     menuScene.addItem(&jogButton);
+#ifndef NO_PROBE_MENU
     menuScene.addItem(&probeButton);
+#endif
+#ifndef NO_TOOLCHANGE_MENU
     menuScene.addItem(&toolchangeButton);
+#endif
     menuScene.addItem(&filesButton);
     menuScene.addItem(&controlButton);
     menuScene.addItem(&setupButton);
