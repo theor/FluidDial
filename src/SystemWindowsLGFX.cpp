@@ -20,10 +20,17 @@
 #include <direct.h>
 
 // Concrete LGFX instance sized to the configured display dimensions
-static lgfx::LGFX xdisplay(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-LGFX_Device&      display = xdisplay;
+static const int n_buttons      = 3;
+static const int button_w       = 80;
+static const int button_h       = 80;
+static const int button_half_wh = button_w / 2;
+static lgfx::LGFX xdisplay(DISPLAY_WIDTH, DISPLAY_HEIGHT + button_h);
+LGFX_Device& display = xdisplay;
 
 LGFX_Sprite canvas(&xdisplay);
+
+LGFX_Sprite buttons[3]     = { &xdisplay, &xdisplay, &xdisplay };
+LGFX_Sprite locked_button(&xdisplay);
 
 static m5::Touch_Class xtouch;
 m5::Touch_Class&       touch = xtouch;
@@ -164,6 +171,8 @@ void init_system() {
         exit(1);
     }
     serial_set_baud(hFNC, 115200);
+#else
+    printf("STUB_SERIAL defined, no serial I/O will occur\n");
 #endif
     display.clear();
 }
@@ -303,8 +312,50 @@ nvs_handle_t nvs_init(const char* name) {
 // Display / layout
 // ---------------------------------------------------------------------------
 
+static void initButton(int n) {
+    buttons[n].setColorDepth(display.getColorDepth());
+    buttons[n].createSprite(button_w, button_h);
+    buttons[n].fillRect(0, 0, button_w, button_h, TFT_BLACK);
+    const char* filename;
+    int         color;
+    switch (n) {
+        case 0: color = TFT_RED;    filename = "red_button.png";    break;
+        case 1: color = TFT_YELLOW; filename = "orange_button.png"; break;
+        case 2: color = TFT_GREEN;  filename = "green_button.png";  break;
+        default: return;
+    }
+    buttons[n].fillCircle(button_half_wh, button_half_wh, 28, color);
+    std::string fn("data/");
+    fn += filename;
+    buttons[n].drawPngFile(fn.c_str(), 10, 10, 60, 60, 0, 0, 0.0f, 0.0f, datum_t::top_left);
+}
+
+static void initLockedButton() {
+    locked_button.setColorDepth(display.getColorDepth());
+    locked_button.createSprite(button_w, button_h);
+    locked_button.fillRect(0, 0, button_w, button_h, TFT_BLACK);
+    locked_button.fillCircle(button_half_wh, button_half_wh, 28, TFT_DARKGREY);
+}
+
+static void initButtons() {
+    for (int i = 0; i < n_buttons; i++) {
+        initButton(i);
+    }
+    initLockedButton();
+}
+
+static void redrawButtons() {
+    display.startWrite();
+    for (int i = 0; i < n_buttons; i++) {
+        buttons[i].pushSprite(i * button_w, DISPLAY_HEIGHT);
+    }
+    display.endWrite();
+}
+
 void base_display() {
     display.clear();
+    initButtons();
+    redrawButtons();
 }
 
 void show_logo() {}
@@ -326,7 +377,15 @@ bool screen_encoder(int x, int y, int& delta) {
 }
 
 bool screen_button_touched(bool pressed, int x, int y, int& button) {
-    return false;
+    if (y < DISPLAY_HEIGHT || y >= DISPLAY_HEIGHT + button_h) {
+        return false;
+    }
+    int b = x / button_w;
+    if (b >= n_buttons) {
+        return false;
+    }
+    button = b;
+    return true;
 }
 
 bool switch_button_touched(bool& pressed, int& button) {
