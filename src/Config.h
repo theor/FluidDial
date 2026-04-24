@@ -6,7 +6,7 @@
 
 // #define ECHO_FNC_TO_DEBUG
 
-// #define UART_ON_PORT_B // Not recommended, see comment in System.h
+// #define UART_ON_PORT_B // Not recommended, see comment in HardwareM5Dial.hpp
 
 // Automatically go to Jog Scene when first connected
 // #define AUTO_JOG_SCENE
@@ -16,3 +16,4 @@
 
 // Automatically leave Homing Scene after homing is finished
 // #define AUTO_HOMING_RETURN
+ 
