@@ -29,3 +29,17 @@ constexpr static const int PND_TX_FNC_RX_PIN = GPIO_NUM_13;
 #endif
 
 #define WAKEUP_GPIO RED_BUTTON_PIN
+
+#ifdef USE_EXTIO
+#    ifndef  UART_ON_PORT_B
+#        error "USE_EXTIO uses Port A (GPIO1/2) for I2C and requires UART_ON_PORT_B"
+#    endif
+#    ifndef EXTIO_RED_PIN
+#        define EXTIO_RED_PIN 0
+#    endif
+#    ifndef EXTIO_GREEN_PIN
+#        define EXTIO_GREEN_PIN 1
+#    endif
+#    undef WAKEUP_GPIO
+// #    define WAKEUP_GPIO GPIO_NUM_13  // Port B — connect a button here for deep-sleep wakeup
+#endif
