@@ -100,37 +100,19 @@ bool M5_EXTIO2::setDigitalOutput(uint8_t pin, uint8_t state) {
 /*! @brief Set all digital signal output pins.
     @return True if the set was successful, otherwise false.. */
 bool M5_EXTIO2::setAllDigitalOutputs(uint8_t pins) {
+#if EXTIO_FIRMWARE == 3
     uint8_t reg = EXTIO2_OUTPUTS_CTL_REG;
     return writeBytes(_addr, reg, &pins, 1);
-}
-
-/*! @brief Set the color of led lights.
-    @return True if the set was successful, otherwise false.. */
-bool M5_EXTIO2::setLEDColor(uint8_t pin, uint32_t color) {
-    if (pin > 7) return false;
-    uint8_t data[3] = {0};
-    data[0]         = (color >> 16) & 0xff;
-    data[1]         = (color >> 8) & 0xff;
-    data[2]         = color & 0xff;
-    uint8_t reg     = pin * 3 + EXTIO2_RGB_24B_REG;
-    return writeBytes(_addr, reg, data, 3);
-}
-
-/*! @brief Set the angle of servo rotation.
-    @return True if the set was successful, otherwise false.. */
-bool M5_EXTIO2::setServoAngle(uint8_t pin, uint8_t angle) {
-    uint8_t reg = pin + EXTIO2_SERVO_ANGLE_8B_REG;
-    return writeBytes(_addr, reg, &angle, 1);
-}
-
-/*! @brief Set the pulse of servo.
-    @return True if the set was successful, otherwise false.. */
-bool M5_EXTIO2::setServoPulse(uint8_t pin, uint16_t pulse) {
-    uint8_t data[2];
-    uint8_t reg = pin * 2 + EXTIO2_SERVO_PULSE_16B_REG;
-    data[1]     = (pulse >> 8) & 0xff;
-    data[0]     = pulse & 0xff;
-    return writeBytes(_addr, reg, data, 2);
+#else
+    // firmware < 3 doesn't support setting all digital outputs at once, so we set them one by one.
+    bool success = true;
+    for (int i = 0; i < 8; i++)    {
+        uint8_t reg = i + EXTIO2_OUTPUT_CTL_REG;
+        uint8_t state = (pins & (1 << i)) ? 1 : 0;
+        success &= writeBytes(_addr, reg, &state, 1);
+    }
+    return success;
+#endif
 }
 
 /*! @brief Get digital signal input.
@@ -149,12 +131,27 @@ bool M5_EXTIO2::getDigitalInput(uint8_t pin) {
     @return pin status 0-7 as bits of byte, or returns 0 if read is
             unsuccessful.. */
 uint8_t M5_EXTIO2::getAllDigitalInputs(void) {
+#if EXTIO_FIRMWARE == 3
     uint8_t data;
     uint8_t reg = EXTIO2_DIGITAL_INPUTS_REG;
     if (readBytes(_addr, reg, &data, 1)) {
         return data;
     }
-    return 0;
+#else
+    // firmware < 3 doesn't support reading all digital inputs at once, so we read them one by one and combine the results.
+    uint8_t combined = 0;
+    
+    for (int i = 0; i < 8; i++)
+    {
+        uint8_t data;
+         uint8_t reg = i + EXTIO2_DIGITAL_INPUT_REG;
+        if (readBytes(_addr, reg, &data, 1)) {
+            combined |= (data ? (1 << i) : 0);
+        }
+    }
+    
+    return combined;
+#endif
 }
 
 /*! @brief Get analog singal input.
@@ -174,20 +171,6 @@ uint16_t M5_EXTIO2::getAnalogInput(uint8_t pin, extio_anolog_read_mode_t bit) {
         }
     }
     return 0;
-}
-
-/*! @brief Set the pwm duty cycle.
-    @return True if the set was successful, otherwise false.. */
-bool M5_EXTIO2::setPwmDutyCycle(uint8_t pin, uint8_t duty) {
-    uint8_t reg = pin + EXTIO2_PWM_DUTY_CYCLE_REG;
-    return writeBytes(_addr, reg, &duty, 1);
-}
-
-/*! @brief Set the pwm frequency.0:2KHz,1:1KHz,2:500Hz,3:250Hz,4:125Hz
-    @return True if the set was successful, otherwise false.. */
-bool M5_EXTIO2::setPwmFrequency(uint8_t pin, uint8_t freq) {
-    uint8_t reg = pin + EXTIO2_PWM_FREQUENCY_REG;
-    return writeBytes(_addr, reg, &freq, 1);
 }
 
 #endif  // USE_EXTIO

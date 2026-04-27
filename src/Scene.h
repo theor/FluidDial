@@ -39,6 +39,10 @@ public:
     virtual void onGreenButtonRelease() {}
     virtual void onDialButtonPress() {}
     virtual void onDialButtonRelease() {}
+    virtual void onAbortButtonPress() { fnc_realtime(FeedHold); }
+    virtual void onAbortButtonRelease() {}
+    virtual void onMacroButtonPress() { fnc_send_line("$RM=1", 1000); }
+    virtual void onMacroButtonRelease() {}
     virtual void onTouchPress() {}
     virtual void onTouchRelease() {}
     virtual void onTouchClick() {}

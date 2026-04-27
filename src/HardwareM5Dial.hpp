@@ -40,6 +40,11 @@ constexpr static const int PND_TX_FNC_RX_PIN = GPIO_NUM_13;
 #    ifndef EXTIO_GREEN_PIN
 #        define EXTIO_GREEN_PIN 1
 #    endif
-#    undef WAKEUP_GPIO
-// #    define WAKEUP_GPIO GPIO_NUM_13  // Port B — connect a button here for deep-sleep wakeup
+#    ifndef EXTIO_ABORT_PIN
+#        define EXTIO_ABORT_PIN 2
+#    endif
+#    ifndef EXTIO_MACRO_PIN
+#        define EXTIO_MACRO_PIN 3
+#    endif
+#    define WAKEUP_GPIO DIAL_BUTTON_PIN
 #endif

@@ -9,26 +9,33 @@
 #ifndef _M5_EXTIO2_H_
 #define _M5_EXTIO2_H_
 
+// v3 supports reading/writing all digital outputs/inputs at once, while v1 and v2 only support reading/writing them one by one. V3 can also be flashed over i2c
+#define EXTIO_FIRMWARE 1
+
 #include <Arduino.h>
 #include <Wire.h>
 #include "pins_arduino.h"
 
-#define EXTIO2_DEFAULT_ADDR         0x45
-#define EXTIO2_MODE_REG             0x00
-#define EXTIO2_OUTPUT_CTL_REG       0x10
-#define EXTIO2_OUTPUTS_CTL_REG      0x18
-#define EXTIO2_DIGITAL_INPUT_REG    0x20
-#define EXTIO2_DIGITAL_INPUTS_REG   0x28
-#define EXTIO2_ANALOG_INPUT_8B_REG  0x30
-#define EXTIO2_ANALOG_INPUT_12B_REG 0x40
-#define EXTIO2_SERVO_ANGLE_8B_REG   0x50
-#define EXTIO2_SERVO_PULSE_16B_REG  0x60
-#define EXTIO2_RGB_24B_REG          0x70
-#define EXTIO2_PWM_DUTY_CYCLE_REG   0x90
-#define EXTIO2_PWM_FREQUENCY_REG    0xA0
+static constexpr uint8_t EXTIO2_DEFAULT_ADDR =         0x45;
+static constexpr uint8_t EXTIO2_MODE_REG =             0x00;
+static constexpr uint8_t EXTIO2_OUTPUT_CTL_REG =       0x10;
+// v3 only
+static constexpr uint8_t EXTIO2_OUTPUTS_CTL_REG =      0x18;
+static constexpr uint8_t EXTIO2_DIGITAL_INPUT_REG =    0x20;
+// v3 only
+static constexpr uint8_t EXTIO2_DIGITAL_INPUTS_REG =   0x28;
+static constexpr uint8_t EXTIO2_ANALOG_INPUT_8B_REG =  0x30;
+static constexpr uint8_t EXTIO2_ANALOG_INPUT_12B_REG = 0x40;
+static constexpr uint8_t EXTIO2_SERVO_ANGLE_8B_REG =   0x50;
+static constexpr uint8_t EXTIO2_SERVO_PULSE_16B_REG =  0x60;
+static constexpr uint8_t EXTIO2_RGB_24B_REG =          0x70;
+static constexpr uint8_t EXTIO2_PWM_DUTY_CYCLE_REG =   0x90;
+static constexpr uint8_t EXTIO2_PWM_FREQUENCY_REG =    0xA0;
 
-#define EXTIO2_FW_VERSION_REG 0xFE
-#define EXTIO2_ADDRESS_REG    0xFF
+// v3 only
+static constexpr uint8_t EXTIO2_FLASH_REG =    0xFD;
+static constexpr uint8_t EXTIO2_FW_VERSION_REG = 0xFE;
+static constexpr uint8_t EXTIO2_ADDRESS_REG =    0xFF;
 
 typedef enum {
     DIGITAL_INPUT_MODE = 0,
@@ -45,6 +52,7 @@ enum class ErrorCode {
     BeginWire = 1,
     Start = 2,
     Stop = 3,
+    Timeout = 5,
     Uninit = 255,
 };
 class M5_EXTIO2 {
@@ -62,17 +70,12 @@ class M5_EXTIO2 {
     bool setAllPinMode(extio_io_mode_t mode);
     bool setPinMode(uint8_t pin, extio_io_mode_t mode);
     bool setDeviceAddr(uint8_t addr);
-    bool setServoAngle(uint8_t pin, uint8_t angle);
-    bool setServoPulse(uint8_t pin, uint16_t pulse);
-    bool setLEDColor(uint8_t pin, uint32_t color);
     bool setDigitalOutput(uint8_t pin, uint8_t state);
     bool setAllDigitalOutputs(uint8_t pins);
     bool getDigitalInput(uint8_t pin);
     uint8_t getAllDigitalInputs(void);
     uint16_t getAnalogInput(uint8_t pin, extio_anolog_read_mode_t bit = _8bit);
     uint8_t getVersion();
-    bool setPwmDutyCycle(uint8_t pin, uint8_t duty);
-    bool setPwmFrequency(uint8_t pin, uint8_t freq);
 };
 
 #endif

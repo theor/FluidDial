@@ -10,20 +10,18 @@
 #ifdef USE_WIFI
 #    include "WiFiConnection.h"
 #endif
+
 #ifdef USE_EXTIO
 #    include "M5_EXTIO2.h"
 M5_EXTIO2 extio;
 volatile uint8_t extio_inputs;
 
-
 void extioTask(void* parameter) {
     while (true) {
         extio_inputs = extio.getAllDigitalInputs();
-        // USBSerial.printf("extio_inputs: %02x\n", extio_inputs);
         vTaskDelay(pdMS_TO_TICKS(16));
     }
 }
-
 #endif
 
 LGFX_Device&       display = M5Dial.Display;
@@ -72,60 +70,31 @@ void init_hardware() {
 #endif
 
 #ifdef USE_EXTIO
-    // Port A (GPIO1/2) stays in I2C mode from M5Dial.begin(); Wire is already initialized.
-    //  while(!USBSerial) {
-    //         delay(100);
-    //     }
-    // USBSerial.println("extio init");
-        display.setCursor(20, display.height() / 2);
-        display.print("Initializing ExtIO...");
+    display.setCursor(20, display.height() / 2);
     ErrorCode e = ErrorCode::Uninit;
     while ((e = extio.begin(&Wire)) != ErrorCode::Ok) {
         display.printf("ExtIO init error: %d\n", e);
 
-        if(e == ErrorCode::Timeout){
+        if (e == ErrorCode::Timeout) {
             display.println();
             display.println("ExtIO init timeout, resetting...");
             Wire.endTransmission();
             Wire.end();
             delay(2000);
         }
-       
-        delay(50);
-        // USBSerial.printf("extio Connect Error: %d\n", e);
+
+        delay(500);
     }
     display.clear();
     extio.setAllPinMode(DIGITAL_INPUT_MODE);
 
-    // display.setCursor(20, display.height() / 2);
-    // int i = 0;
-    // while (true) {
-    // display.clear();
-    //      display.drawString("FW VERSION: " + String(extio.getVersion()) , 10, 40);
-    //      display.drawString("All: " + String(extio.getAllDigitalInputs(), 16), 10, 60);
-    //     for (uint8_t i = 0; i < 8; i++) {
-    //         if (extio.getDigitalInput(i)) {
-    //             display.fillRect(i * 20 + 20, 145, 18, 20, ORANGE);
-    //         } else {
-    //             display.drawRect(i * 20 + 20, 145, 18, 20, ORANGE);
-    //         }
-    //     }
-    // vTaskDelay(100);
-    // }
-
-    xTaskCreatePinnedToCore(extioTask, "extioTask"  // A name just for humans
-                            ,
-                            2048  // This stack size can be checked & adjusted
-                                  // by reading the Stack Highwater
-                            ,
+    xTaskCreatePinnedToCore(extioTask,
+                            "extioTask",
+                            2048,
                             NULL,
-                            1  // Priority, with 3 (configMAX_PRIORITIES - 1)
-                               // being the highest, and 0 being the lowest.
-                            ,
-                            NULL, 1);
-       
-    // GPIO13 (WAKEUP_GPIO) is a dedicated deep-sleep wakeup pin — connect a button to GPIO13+GND.
-    // lgfx::gpio::command(lgfx::gpio::command_mode_input_pullup, WAKEUP_GPIO);
+                            1,  // Priority, with 3 (configMAX_PRIORITIES - 1) the highest
+                            NULL,
+                            1);
     abortButton.setDebounceThresh(5);
     macroButton.setDebounceThresh(5);
 #else
@@ -190,7 +159,8 @@ bool switch_button_touched(bool& pressed, int& button) {
         pressed = false;
         return true;
     }
-    #ifdef USE_EXTIO
+
+#ifdef USE_EXTIO
     if (abortButton.wasPressed()) {
         button  = 3;
         pressed = true;
@@ -211,7 +181,8 @@ bool switch_button_touched(bool& pressed, int& button) {
         pressed = false;
         return true;
     }
-    #endif
+#endif
+
     return false;
 }
 
@@ -259,8 +230,11 @@ void redrawButtons() {}
 // but that can't work because GPIO42 is not an RTC GPIO and thus
 // cannot be used as an ext0 wakeup source.
 void deep_sleep(int us) {
-#ifndef USE_EXTIO
+#ifdef WAKEUP_GPIO
     display.sleep();
+#   ifdef WAKEUP_TOUCHSCREEN
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, LOW);
+#   else
     rtc_gpio_pullup_en((gpio_num_t)WAKEUP_GPIO);
 
     esp_sleep_enable_ext0_wakeup((gpio_num_t)WAKEUP_GPIO, false);
@@ -272,6 +246,7 @@ void deep_sleep(int us) {
     } else {
         // esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
     }
+#   endif
     esp_deep_sleep_start();
 #endif
 }

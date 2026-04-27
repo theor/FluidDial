@@ -88,6 +88,21 @@ void dispatch_button(bool pressed, int button) {
                 current_scene->onGreenButtonRelease();
             }
             break;
+        case 3:
+            if (pressed) {
+                current_scene->onAbortButtonPress();
+            } else {
+                current_scene->onAbortButtonRelease();
+            }
+            break;
+        case 4:
+            
+            if (pressed) {
+                current_scene->onMacroButtonPress();
+            } else {
+                current_scene->onMacroButtonRelease();
+            }
+            break;
         default:
             break;
     }
