@@ -31,6 +31,7 @@ constexpr static const int PND_TX_FNC_RX_PIN = GPIO_NUM_13;
 #define WAKEUP_GPIO RED_BUTTON_PIN
 
 #ifdef USE_EXTIO
+#    define WAKEUP_TOUCHSCREEN
 #    ifndef  UART_ON_PORT_B
 #        error "USE_EXTIO uses Port A (GPIO1/2) for I2C and requires UART_ON_PORT_B"
 #    endif
@@ -46,5 +47,4 @@ constexpr static const int PND_TX_FNC_RX_PIN = GPIO_NUM_13;
 #    ifndef EXTIO_MACRO_PIN
 #        define EXTIO_MACRO_PIN 3
 #    endif
-#    define WAKEUP_GPIO DIAL_BUTTON_PIN
 #endif

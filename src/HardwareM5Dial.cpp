@@ -50,7 +50,6 @@ void init_hardware() {
     lgfx::gpio::command(lgfx::gpio::command_mode_output, GPIO_NUM_46);
     lgfx::gpio::command(lgfx::gpio::command_write_high, GPIO_NUM_46);
 
-    #ifdef DEBUG_TO_USB
     // This must be done after M5Dial.begin which sets the PortA pins
     // to I2C mode.  We need to override that to use them for serial.
     // The baud rate is irrelevant because USBSerial emulates a UART
@@ -59,7 +58,6 @@ void init_hardware() {
     // a USB link at the USB data rate.  You can set the baud rate
     // at the other end to anything you want and it will still work.
     USBSerial.begin();
-    #endif
 
 #ifdef USE_WIFI
     if (wifi_use_uart_mode()) {
@@ -229,8 +227,9 @@ void redrawButtons() {}
 // button is supposed to be the dial button that connects to GPIO42,
 // but that can't work because GPIO42 is not an RTC GPIO and thus
 // cannot be used as an ext0 wakeup source.
+// the touch screen (GPIO14) can wake from deep sleep however
 void deep_sleep(int us) {
-#ifdef WAKEUP_GPIO
+#if defined(WAKEUP_GPIO) || defined(WAKEUP_TOUCHSCREEN)
     display.sleep();
 #   ifdef WAKEUP_TOUCHSCREEN
     esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, LOW);
